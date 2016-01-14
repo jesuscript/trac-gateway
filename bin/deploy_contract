@@ -1,5 +1,5 @@
 #!/usr/bin/env node
 
-require("../lib/deployContract")(process.env.CONTRACT, function(addr){
-  console.log(process.argv[2]);
+require("../lib/deployContract")(process.argv[2], function(addr){
+  console.log(addr);
 });
