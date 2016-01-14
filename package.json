@@ -1,5 +1,9 @@
 {
   "dependencies": {
-    "express": "^4.13.3"
+    "express": "^4.13.3",
+    "lodash": "~4.0.0",
+    "web3": "^0.15.1",
+    "ethereumjs-util": "^2.5.0",
+    "web3-raw-provider": "*"
   }
 }
