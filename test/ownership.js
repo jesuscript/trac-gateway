@@ -8,7 +8,7 @@ describe("ownership", function(){
       responses;
 
   var serial = "xyz123",
-      ownerAddress = "0x0000000000000000000000000000000000000000";
+      ownerAddress = "0x0000000000000000000000000000000000000042";
   
   before(function(done){
     this.timeout(10000);
@@ -43,7 +43,7 @@ describe("ownership", function(){
           }, cb);
         }],
         getOwnership: ["getTX", _.partial(request.get, {
-          url: "/ownership",
+          url: "/ownership/"+serial,
           json: true
         })]
       },function(err, results){
@@ -76,6 +76,7 @@ describe("ownership", function(){
 
   describe("GET /ownership", function(){
     it("responds as expected", function(){
+      console.log("address:", responses.getOwnership[0].body.address);
       responses.getOwnership[0].body.address.should.be.equal(ownerAddress);
     });
   });
