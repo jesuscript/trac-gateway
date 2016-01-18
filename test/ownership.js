@@ -9,7 +9,7 @@ describe("ownership", function(){
 
   var serial = "xyz123",
       ownerAddress = "0x0000000000000000000000000000000000000042";
-  
+
   before(function(done){
     this.timeout(10000);
     request = request.defaults({baseUrl: "http://localhost:" + process.env.PORT});
@@ -66,6 +66,7 @@ describe("ownership", function(){
       responses.postOwnership[0].body.should.have.property("address", ownerAddress);
       responses.postOwnership[0].body.should.have.property("serial", serial);
     });
+
   });
 
   describe("GET /tx", function(){
@@ -78,6 +79,16 @@ describe("ownership", function(){
     it("responds as expected", function(){
       console.log("address:", responses.getOwnership[0].body.address);
       responses.getOwnership[0].body.address.should.be.equal(ownerAddress);
+    });
+
+    it("returns 404 if the serial has not been registered before", function(done){
+      request.get({
+        url:"/ownership/"+"some_unknown_seial",
+        json: true
+      }, function(err, res){
+        res.statusCode.should.be.equal(404);
+        done();
+      });
     });
   });
 });
