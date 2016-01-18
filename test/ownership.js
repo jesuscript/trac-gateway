@@ -77,7 +77,6 @@ describe("ownership", function(){
 
   describe("GET /ownership", function(){
     it("responds as expected", function(){
-      console.log("address:", responses.getOwnership[0].body.address);
       responses.getOwnership[0].body.address.should.be.equal(ownerAddress);
     });
 
