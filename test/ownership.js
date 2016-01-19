@@ -1,5 +1,6 @@
 var async = require("async"),
     should = require("should"),
+    crypto = require("crypto"),
     _ = require("lodash"),
     request = require("request");
 
@@ -8,6 +9,8 @@ describe("ownership", function(){
       responses;
 
   var serial = "xyz123",
+      secret = "secret",
+      newSecret = "newSecret",
       ownerAddress = "0x0000000000000000000000000000000000000042";
 
   before(function(done){
@@ -22,25 +25,14 @@ describe("ownership", function(){
           url: "/ownership",
           json: {
             serial: serial,
-            address: ownerAddress
+            address: ownerAddress,
+            secretHash: crypto.createHash("sha256").update(secret).digest("hex")
           }
         }),
-        getTX: ["postOwnership", function(cb, res){
-          async.retry({times: 5, interval: 1000}, function(cb){
-            var hash = res.postOwnership[0].body.txHash;
-            if(!hash) throw new Error("no tx hash!");
-            
-            request.get({
-              url: "/tx/"+hash,
-              json: true
-            }, function(err, res, body){
-              if(err) throw err;
-
-              if(body.state == "rejected") throw new Error("transaction rejected");
-
-              cb((body.state == "accepted") ? null: "Unconfirmed transaction", res);
-            });
-          }, cb);
+        getTX: ["postOwnership", function(cb, ress){
+          ress.postOwnership[0].statusCode.should.be.equal(200);
+          
+          waitUntilConfirmed(ress.postOwnership[0].body.txHash, cb);
         }],
         getOwnership: ["getTX", _.partial(request.get, {
           url: "/ownership/"+serial,
@@ -90,4 +82,58 @@ describe("ownership", function(){
       });
     });
   });
+
+  var newOwnerAddress = "0x0000000000000000000000000000000000000053";
+
+  it("can be transferred if the recepient knows the secret", function(done){
+    async.auto({
+      put: function(cb){
+        request.put({
+          url: "/ownership/" + serial,
+          json: {
+            address: newOwnerAddress,
+            secret: secret,
+            newSecretHash: crypto.createHash("sha256").update("new secret").digest("hex")
+          }
+        }, function(err, res, body){
+          res.statusCode.should.be.equal(200);
+          cb(err, res);
+        });
+      }, 
+      wait: ["put",function(cb, ress){
+        waitUntilConfirmed(ress.put.body.txHash, cb);
+      }],
+      get: ["wait", _.partial(request.get, {
+        url: "/ownership/" + serial,
+        json: true
+      })]
+    }, function(err,results){
+      if(err) throw err;
+
+      results.get[0].body.address.should.be.equal(newOwnerAddress);
+
+      done();
+    });
+  });
+
+  it("connot be transferred if the recepient doesn't know the secret", function(){
+    
+  });
+
+  function waitUntilConfirmed(txHash, cb){
+    async.retry({times: 5, interval: 1000}, function(cb){
+      if(!txHash) throw new Error("no tx hash!");
+      
+      request.get({
+        url: "/tx/"+txHash,
+        json: true
+      }, function(err, res, body){
+        if(err) throw err;
+
+        if(body.state == "rejected") throw new Error("transaction rejected");
+
+        cb((body.state == "accepted") ? null: "Unconfirmed transaction", res);
+      });
+    }, cb);
+  }
 });

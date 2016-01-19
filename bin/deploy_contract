@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
-require("../lib/contracts").deploy(process.argv[2], function(addr){
+require("../lib/contracts").deploy(process.argv[2], {
+  force: process.argv[3] == "--force"
+} ,function(addr){
   console.log(addr);
 });
