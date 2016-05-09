@@ -85,7 +85,7 @@ describe("ownership", function(){
 
   var newOwnerAddress = "0x0000000000000000000000000000000000000053";
 
-  it("can be transferred if the recepient knows the secret", function(done){
+  it.skip("can be transferred if the recepient knows the secret", function(done){
     async.auto({
       put: function(cb){
         request.put({
